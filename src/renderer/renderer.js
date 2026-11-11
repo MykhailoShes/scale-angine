@@ -7,6 +7,7 @@ const fields = {
   folderName: document.getElementById('folderName'),
   importDirectory: document.getElementById('importDirectory'),
   exportDirectory: document.getElementById('exportDirectory'),
+  inventoryMode: document.getElementById('inventoryMode'),
 };
 
 const btnShowPassword = document.getElementById('btn-show-password');
@@ -27,6 +28,7 @@ function readForm() {
     folderName: fields.folderName.value.trim(),
     importDirectory: fields.importDirectory.value.trim(),
     exportDirectory: fields.exportDirectory.value.trim(),
+    inventoryMode: fields.inventoryMode.checked,
   };
 }
 
@@ -37,6 +39,7 @@ function applyConfig(cfg) {
   fields.folderName.value = cfg.folderName || '';
   fields.importDirectory.value = cfg.importDirectory || '';
   fields.exportDirectory.value = cfg.exportDirectory || '';
+  fields.inventoryMode.checked = cfg.inventoryMode === true;
 }
 
 function applyState(state) {
