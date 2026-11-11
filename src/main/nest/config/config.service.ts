@@ -83,6 +83,7 @@ export class ConfigService {
       folderName: (next.folderName || '').trim(),
       importDirectory: (next.importDirectory || '').trim(),
       exportDirectory: (next.exportDirectory || '').trim(),
+      inventoryMode: next.inventoryMode === true,
     };
 
     // Persist with the password encrypted; the in-memory cache keeps the

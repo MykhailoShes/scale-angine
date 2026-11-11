@@ -12,6 +12,8 @@ const STABLE_MS = 1500; // Skip files whose mtime is newer than this (scale may 
 // or /upload/import_error after handling). NOT to be confused with the legacy /import at the
 // SFTP root, which is unrelated.
 const REMOTE_TARGET_DIR = '/upload/import';
+// Inventory mode: same lifecycle, separate inbox (and separate tables in the middleware).
+const REMOTE_INVENTORY_DIR = '/upload/inventory_import';
 const LOCAL_PROCESSED_SUBDIR = 'processed';
 // Hard cap on how long a single tick may run. Even a big upload should
 // finish well within this. Anything longer is a zombie tick and we
@@ -68,7 +70,7 @@ export class ExportWatcherService {
     const processedDir = path.join(cfg.exportDirectory, LOCAL_PROCESSED_SUBDIR);
     fs.mkdirSync(processedDir, { recursive: true });
 
-    this.logger.info(SOURCE, `Watching ${cfg.exportDirectory} → SFTP ${REMOTE_TARGET_DIR}`);
+    this.logger.info(SOURCE, `Watching ${cfg.exportDirectory} → SFTP ${this.remoteDir()}`);
     this.timer = setInterval(() => this.tick().catch((e) => {
       this.logger.error(SOURCE, `tick error: ${(e as Error).message}`);
     }), POLL_MS);
@@ -90,6 +92,11 @@ export class ExportWatcherService {
     this.lastSuccessAt = 0;
     this.staleWarned = false;
     this.logger.info(SOURCE, 'Stopped (state reset)');
+  }
+
+  /** Read on every use so toggling the checkbox + Save applies without a restart. */
+  private remoteDir(): string {
+    return this.config.get().inventoryMode ? REMOTE_INVENTORY_DIR : REMOTE_TARGET_DIR;
   }
 
   private async tick(): Promise<void> {
@@ -133,7 +140,7 @@ export class ExportWatcherService {
     await this.sftp.ensureConnected();
 
     // Make sure remote inbox exists
-    await this.sftp.ensureDir(REMOTE_TARGET_DIR);
+    await this.sftp.ensureDir(this.remoteDir());
 
     const processedDir = path.join(cfg.exportDirectory, LOCAL_PROCESSED_SUBDIR);
     fs.mkdirSync(processedDir, { recursive: true });
@@ -159,8 +166,8 @@ export class ExportWatcherService {
   }
 
   private async transferOne(localPath: string, name: string, processedDir: string): Promise<void> {
-    const remotePath = `${REMOTE_TARGET_DIR}/${name}`;
-    this.logger.info(SOURCE, `→ uploading ${name}`);
+    const remotePath = `${this.remoteDir()}/${name}`;
+    this.logger.info(SOURCE, `→ uploading ${name}${this.config.get().inventoryMode ? ' [INVENTORY]' : ''}`);
     try {
       await this.sftp.uploadFile(localPath, remotePath);
     } catch (err) {

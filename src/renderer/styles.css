@@ -72,6 +72,12 @@ html, body {
   margin-bottom: 12px;
 }
 
+.field--check {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .field__label {
   color: var(--muted);
   font-size: 13px;

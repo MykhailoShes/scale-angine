@@ -7,6 +7,7 @@
 Proxy gateway between **Mettler Toledo** scales and an **SFTP** server. Sits on the cashier/back-office PC, watches two directories in parallel, and shuttles XML files in both directions:
 
 - **Export → SFTP**: when the scale drops a receipt XML into the local *Export* directory, Scale Engine uploads it to **`/upload/import`** on the SFTP server (the middleware's shared inbox; it then moves files to `/upload/import_processed` or `/upload/import_error` on its own). The local copy is archived under `<Export>/processed`.
+  - With **Inventory mode** enabled the receipts go to **`/upload/inventory_import`** instead (the middleware keeps them in separate tables and moves files to `/upload/inventory_import_processed` / `inventory_import_error`). The flag is read on every tick, so Save applies it without restarting the agent.
 - **SFTP → Import**: when the POS App publishes a product XML into **`/upload/<FolderName>/export/`** on the SFTP server, Scale Engine downloads it into the local *Import* directory (where Mettler Toledo picks it up) and moves the remote file to `/upload/<FolderName>/export/processed`.
 
 ## Stack
@@ -49,6 +50,7 @@ All four fields are stored as JSON in Electron's per-user `userData` folder (`sc
 | Folder Name      | Sub-folder under `/upload/` assigned to this scale (e.g. `DIsaH6`)                             |
 | Import directory | Local folder Mettler Toledo reads product XMLs from. Scale Engine writes here.                 |
 | Export directory | Local folder Mettler Toledo writes receipt XMLs to. Scale Engine reads here.                   |
+| Inventory mode   | Checkbox. Routes receipts to `/upload/inventory_import`. Does not switch the scale itself.     |
 
 Three buttons control the agent:
 
